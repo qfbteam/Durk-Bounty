@@ -1,25 +1,9 @@
-    ["Theme"] = {
-        ["Enable"] = false,
-        ["Name"] = "Ayaka", -- Hutao, Raiden, Ayaka, Yelan
-        ["Custom Theme"] = {
-            ["Enable"] = true,
-            ["Text Color"] = Color3.fromRGB(231, 85, 88),
-            ["Character Position"] = UDim2.new(0.563000023, 0, -0.174999997, 0)
-        }
-    },
-    ["Webhook"] = {
-        ["Enable"] = false,
-        ["Url"] = "https://discord.com/api/webhooks/1290696805759057993/UNhPuNKxI1BJjkV3uAyg_PX1dHSsixK1F72GNvIoYCqfS6YzoWC6PM7e6zgQ-udEVf6l",
-        ["Image"] = ""
-    }
-}
-loadstring(game:HttpGet("https://raw.githubusercontent.com/verudous/Xero-Hub/main/autobounty.lua"))()
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 local Window = OrionLib:MakeWindow({Name = "Durk Ware|Auto Bounty", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
 local Tab = Window:MakeTab({
-	Name = "Main",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
 })
 
 local players = game:GetService("Players") -- Obtém o serviço de jogadores
@@ -97,52 +81,43 @@ end
 -- Inicie a atualização do parágrafo
 updateParagraph()
 
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:FindFirstChildOfClass("Humanoid")
 
+while true do
+    wait(3)  -- Espera 3 segundos
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+    local closestHumanoid = nil
+    local closestDistance = math.huge  -- Inicia com uma distância muito grande
 
-local function getNearestPlayer()
-    local localPlayer = Players.LocalPlayer
-    local nearestPlayer = nil
-    local nearestDistance = math.huge
+    -- Percorre todos os jogadores no servidor
+    for _, otherPlayer in pairs(game.Players:GetPlayers()) do
+        if otherPlayer ~= player then
+            local otherCharacter = otherPlayer.Character
+            if otherCharacter and otherCharacter:FindFirstChildOfClass("Humanoid") then
+                local otherHumanoid = otherCharacter:FindFirstChildOfClass("Humanoid")
+                local distance = (character.HumanoidRootPart.Position - otherCharacter.HumanoidRootPart.Position).magnitude
 
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local distance = (localPlayer.Character.HumanoidRootPart.Position - player.Character.HumanoidRootPart.Position).magnitude
-            if distance < nearestDistance then
-                nearestDistance = distance
-                nearestPlayer = player
+                -- Verifica se este humanoide é o mais próximo
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closestHumanoid = otherHumanoid
+                end
             end
         end
     end
 
-    return nearestPlayer
-end
+    -- Se um humanoide mais próximo foi encontrado, exibe a notificação
+    if closestHumanoid then
+        local name = closestHumanoid.Parent.Name  -- Nome do jogador
+        local hp = closestHumanoid.Health  -- Vida do humanoide
 
-local lastNearestPlayer = nil -- Armazena o último jogador mais próximo
-
-while true do
-    wait(4) -- Espera 4 segundos
-
-    local nearestPlayer = getNearestPlayer()
-    
-    -- Verifica se o jogador mais próximo mudou
-    if nearestPlayer ~= lastNearestPlayer then
-        lastNearestPlayer = nearestPlayer
-        
-        if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("Humanoid") then
-            local hp = nearestPlayer.Character.Humanoid.Health
-            -- Exibe a notificação duas vezes
-            for i = 1, 2 do
-                OrionLib:MakeNotification({
-                    Name = nearestPlayer.Name,
-                    Content = "Vida: " .. tostring(hp), -- Mostra a vida do humanoide mais próximo
-                    Image = "rbxassetid://4483345998",
-                    Time = 5
-                })
-                wait(1) -- Espera 1 segundo entre as notificações
-            end
-        end
+        OrionLib:MakeNotification({
+            Name = name, 
+            Content = tostring(hp), 
+            Image = "rbxassetid://4483345998",
+            Time = 5
+        })
     end
 end
